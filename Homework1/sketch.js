@@ -4,6 +4,8 @@ const Body = Matter.Body;
 const Composite = Matter.Composite;
 const Events = Matter.Events;
 
+let canvas;
+
 let engine;
 let world;
 
@@ -28,9 +30,9 @@ const orange = "#F5A313";
 const lineColor = "#B7AD98";
 
 
-// SETUP
+//////////////////////////// SETUP
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  canvas = createCanvas(windowWidth, windowHeight);
 
   // Matter
   engine = Engine.create();
@@ -90,9 +92,9 @@ function setup() {
   ]);
 
   // 좌표
-  const jointX = width * 0.8;
-  const jointY = height * 0.45;
-  const leftX = width * 0.25;
+  const jointX = width / 2 + 180;
+  const jointY = height / 2;
+  const leftX = width / 2 - 370;
   const leftY = jointY;
 
   // 떨어지는 빨간 공
@@ -160,7 +162,7 @@ function setup() {
   );
 }
 
-// DRAW
+//////////////////////////////////// DRAW
 function draw() {
 
   background(255);
@@ -228,12 +230,14 @@ function updateSway() {
 // 모빌
 function drawMobile() {
   // 기본 좌표
-  const jointX = width * 0.8;
-  const jointY = height * 0.45;
-  const leftX = width * 0.25;
-  const leftY = jointY;
-  const topY = height * 0.25;
-  const bottomY = height * 0.57;
+  const jointX = width / 2 + 180;
+const jointY = height / 2;
+
+const leftX = width / 2 - 370;
+const leftY = jointY;
+
+const topY = jointY - 200;
+const bottomY = jointY + 90;
 
 
   // 원 크기
@@ -359,8 +363,8 @@ function rotatePoint(
 
 // 삼각형 받침대
 function drawStand() {
-  const jointX = width * 0.8;
-  const jointY = height * 0.45;
+  const jointX = width / 2 + 180;
+  const jointY = height / 2;
   const floorY = height * 0.84;
   const triangleWidth = 90;
   const triangleX = jointX - 180;
