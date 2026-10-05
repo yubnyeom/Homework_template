@@ -3,11 +3,6 @@ const Bodies = Matter.Bodies;
 const Body = Matter.Body;
 const Composite = Matter.Composite;
 
-const green = "#064442";
-const teal = "#27939B";
-const orange = "#F5A313";
-const lineColor = "#B7AD98";
-
 // 기본 변수
 let canvas;
 let engine;
@@ -15,6 +10,8 @@ let world;
 let umbrellaX;
 let umbrellaY;
 let ground;
+let puddles = [];
+let splashDrops = [];
 
 // 우산 크기
 const umbrellaW = 200;
@@ -41,7 +38,7 @@ const foldedBottomY = -15;
 // 비
 let raindrops = [];
 const rainSize = 8;
-const rainInterval = 2;
+const rainInterval = 1;
 
 //바닥 쓸기
 const groundHeight = 80;
@@ -96,15 +93,15 @@ Composite.add(world, ground);
 /////////////////////////////////// draw
 function draw() {
 
-  background(teal);
+  background("#b3b9b7");
 
-  fill(lineColor);
+  fill("#989d9a");
   noStroke();
   rect(
-  0,
-  height - 80,
-  width,
-  80
+    0,
+    height - groundHeight,
+    width,
+    groundHeight
   );
   // 실제 우산 충돌체 위치 업데이트
   updateUmbrellaBodies();
@@ -115,6 +112,7 @@ function draw() {
   createRain();
   updateRain();
   drawRain();
+  drawPuddles();
 
   // 우산 애니메이션
   updateUmbrella();
@@ -144,7 +142,6 @@ function createUmbrellaBodies() {
 }
 
 function updateUmbrellaBodies() {
-
   // 평소 우산
   if (umbrellaProgress === 0) {
     for (
@@ -253,19 +250,40 @@ function createRain() {
 
 // 비 업데이트
 function updateRain() {
+
   for (
     let i = raindrops.length - 1;
     i >= 0;
     i--
   ) {
+
     let rain = raindrops[i];
-    // 화면 밖으로 나갔는지 확인
+
+    // 바닥에 닿았는지
+    if (rain.position.y >= height - groundHeight - rainSize / 2) {
+
+      // 물웅덩이 생성
+      puddles.push({
+        x: rain.position.x,
+        y: height - groundHeight,
+        w: 2,
+        h: random(2, 5),
+        splashed: false
+      });
+
+      // 비 삭제
+      Composite.remove(world, rain);
+      raindrops.splice(i, 1);
+
+      continue;
+    }
+
+    // 화면 밖으로 나간 비 삭제
     let outside =
-      rain.position.y > height + rainSize ||
       rain.position.y < -rainSize ||
       rain.position.x < -rainSize ||
       rain.position.x > width + rainSize;
-    // 화면 밖이면 삭제
+
     if (outside) {
       Composite.remove(world, rain);
       raindrops.splice(i, 1);
@@ -276,14 +294,20 @@ function updateRain() {
 // 비 그리기
 function drawRain() {
   stroke(255);
-  strokeWeight(3);
+  strokeWeight(1);
   strokeCap(ROUND);
   for (let rain of raindrops) {
+
+    let bottomY = min(
+      rain.position.y + 30,
+      height - groundHeight
+    );
+
     line(
       rain.position.x,
       rain.position.y,
       rain.position.x,
-      rain.position.y + 15
+      bottomY
     );
   }
 }
@@ -337,7 +361,7 @@ function popRain() {
           0,
           popRadius,
           popPower,
-          popPower * 0.2
+          popPower * 0.3
         );
       // 바깥쪽으로 밀기
       Body.applyForce(rain, rain.position, {
@@ -362,8 +386,8 @@ function drawUmbrella(x, y) {
   if (sweepMode) {rotate(sweepAngle);}
 
   // 손잡이
-  stroke(green);
-  strokeWeight(4);
+  stroke("#faf57f");
+  strokeWeight(3);
   strokeCap(ROUND);
   noFill();
   // 세로 손잡이
@@ -372,7 +396,7 @@ function drawUmbrella(x, y) {
   arc(-10, 125, 20, 20, 0, PI);
   // 우산 천
   noStroke();
-  fill(orange);
+  fill("#faf57f");
 
   // 바닥 쓸기 모드
   // 완전히 접힌 삼각형으로 고정
@@ -419,8 +443,8 @@ function drawUmbrella(x, y) {
     );
   }
   // 우산 꼭지
-  fill(green);
-  circle(0, -umbrellaH / 1.9, 8);
+  fill("#faf57f");
+  circle(0, -umbrellaH / 1.9, 6);
 
   pop();
 }
@@ -493,34 +517,22 @@ function mouseDragged() {
 
 // 바닥에서 비 쓸어버리기
 function sweepRain(dx) {
-  for (
-    let i = raindrops.length - 1;
-    i >= 0;
-    i--
-  ) {
+  let direction = dx > 0 ? 1 : -1;
+  // 비 쓸기
+  for (let i = raindrops.length - 1; i >= 0; i--) {
     let rain = raindrops[i];
+    let distance = dist(
+      rain.position.x,
+      rain.position.y,
+      umbrellaX,
+      umbrellaY
+    );
 
-    // 우산과 빗방울 거리
-    let distance =
-      dist(
-        rain.position.x,
-        rain.position.y,
-        umbrellaX,
-        umbrellaY
-      );
-    // 우산 가까이에 있는 비만
     if (distance < 100) {
-
-      // 우산이 움직인 방향으로 밀기
-      let direction = dx > 0 ? 1 : -1;
-
       Body.applyForce(rain, rain.position, {
-          x: direction * sweepPower,
-          y: 0
-        }
-      );
-
-      // 화면 밖으로 밀려나면 삭제
+        x: direction * sweepPower,
+        y: 0
+      });
       if (
         rain.position.x < -rainSize * 2 ||
         rain.position.x > width + rainSize * 2
@@ -528,6 +540,36 @@ function sweepRain(dx) {
         Composite.remove(world, rain);
         raindrops.splice(i, 1);
       }
+    }
+  }
+
+  // 물웅덩이 쓸기
+  for (let i = puddles.length - 1; i >= 0; i--) {
+    let puddle = puddles[i];
+    let distance = dist(
+      puddle.x,
+      puddle.y,
+      umbrellaX,
+      umbrellaY + 100
+    );
+
+    // 우산이 웅덩이에 닿으면
+    if (distance < 80 && !puddle.splashed) {
+      puddle.splashed = true;
+      // 물방울 튀기기
+      for (let j = 0; j < 1; j++) {
+        splashDrops.push({
+          x: puddle.x,
+          y: puddle.y,
+          // 쓸어가는 방향으로 날아감
+          vx: direction * random(4, 10),
+          vy: random(-12, -3),
+          // 물방울 크기
+          size: 3,
+        });
+      }
+      // 원래 웅덩이는 제거
+      puddles.splice(i, 1);
     }
   }
 }
@@ -542,6 +584,49 @@ function mouseReleased() {
     }
   }
   isDragging = false;
+}
+
+//물웅덩이 그리기
+function drawPuddles() {
+  noStroke();
+  fill(255);
+  // 기존 웅덩이
+  for (let puddle of puddles) {
+    ellipse(
+      puddle.x,
+      puddle.y,
+      puddle.w,
+      puddle.h
+    );
+  }
+
+  // 튀는 물방울
+  for (let i = splashDrops.length - 1; i >= 0; i--) {
+    let drop = splashDrops[i];
+    // 이동
+    drop.x += drop.vx;
+    drop.y += drop.vy;
+    // 중력
+    drop.vy += 0.25;
+    // 약간씩 느려짐
+    drop.vx *= 0.98;
+
+    // 물방울 그리기
+    ellipse(
+      drop.x,
+      drop.y,
+      drop.size,
+      drop.size
+    );
+    // 바닥에 떨어지거나 화면 밖으로 나가면 삭제
+    if (
+      drop.y > height - groundHeight ||
+      drop.x < -10 ||
+      drop.x > width + 10
+    ) {
+      splashDrops.splice(i, 1);
+    }
+  }
 }
 
 // 화면 크기 변경
