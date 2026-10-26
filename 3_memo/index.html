@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f3ec">
+  <title>피부 정원</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
+</head>
+<body>
+  <!-- 맨 위 안내 -->
+  <header class="title">
+    <h1>피부 정원</h1>
+    <p>최근 한 시술을 기록해보세요</p>
+  </header>
+
+  <!-- 화단 (캔버스) -->
+  <main id="stage" class="stage"></main>
+
+  <!-- 아래 메뉴 바 -->
+  <nav id="bar" class="bar" aria-label="메뉴"></nav>
+
+  <!-- 메뉴를 누르면 위로 열리는 자세한 내용 -->
+  <aside id="drawer" class="drawer" aria-hidden="true">
+    <div id="drawerBody" class="drawer-body"></div>
+  </aside>
+
+  <!-- 꽃/새를 누르면 아래에서 올라오는 정보 -->
+  <section id="infoSheet" class="sheet hidden"></section>
+
+  <!-- 입력 폼 -->
+  <div id="formLayer" class="form-layer hidden">
+    <form id="seedForm" class="seed-form hidden" autocomplete="off">
+      <div class="sf-head">
+        <span class="glyph" id="sfGlyph"></span>
+        <div>
+          <small id="sfKicker">새 씨앗</small>
+          <h2 id="sfTitle"></h2>
+        </div>
+      </div>
+      <p class="sf-desc" id="sfDesc"></p>
+
+      <label>시술 날짜<input type="date" name="date" required></label>
+      <div class="photo-field">
+        <span class="pf-label">사진 <small>선택</small></span>
+        <div class="thumbs" data-thumbs></div>
+      </div>
+
+      <button type="button" class="more-btn" data-more>병원 · 부위 · 비용 · 메모 더 적기</button>
+      <div class="more hidden" data-more-box>
+        <label>병원<input type="text" name="hospital" placeholder="예: OO피부과 강남점"></label>
+        <div class="row2">
+          <label>부위<input type="text" name="area" placeholder="이마, 미간"></label>
+          <label>용량 · 샷 수<input type="text" name="dose" placeholder="50유닛, 300샷"></label>
+        </div>
+        <label>비용<input type="text" name="cost" inputmode="numeric" placeholder="150,000원"></label>
+        <label>메모<textarea name="memo" rows="3" placeholder="담당 선생님, 느낌, 주의사항 등"></textarea></label>
+      </div>
+
+      <div class="sf-actions">
+        <button type="button" class="text-btn" data-cancel>취소</button>
+        <button type="submit" class="primary-btn" id="sfSubmit">화단에 심으러 가기</button>
+      </div>
+    </form>
+
+    <form id="birdForm" class="seed-form hidden" autocomplete="off">
+      <div class="sf-head">
+        <span class="glyph" id="bfGlyph"></span>
+        <div>
+          <small id="bfKicker">새 기록</small>
+          <h2>신경 쓰이는 곳</h2>
+        </div>
+      </div>
+      <p class="sf-desc">화단에 놓으면 새가 날아와 그 자리에 앉아 있어요.</p>
+
+      <label>무엇이 신경 쓰이나요?<input type="text" name="title" required placeholder="예: 왼쪽 볼 기미, 팔자 주름"></label>
+      <div class="photo-field">
+        <span class="pf-label">사진 <small>선택</small></span>
+        <div class="thumbs" data-thumbs></div>
+      </div>
+
+      <button type="button" class="more-btn" data-more>날짜 · 메모 더 적기</button>
+      <div class="more hidden" data-more-box>
+        <label>기록한 날<input type="date" name="date"></label>
+        <label>메모<textarea name="memo" rows="4" placeholder="언제부터, 어떻게 보이는지, 상담 때 물어볼 것 등"></textarea></label>
+      </div>
+
+      <div class="sf-actions">
+        <button type="button" class="text-btn" data-cancel>취소</button>
+        <button type="submit" class="primary-btn" id="bfSubmit">새 부르러 가기</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 사진 크게 보기 -->
+  <div id="viewer" class="viewer hidden">
+    <button class="v-close" aria-label="닫기">×</button>
+    <img id="viewerImg" alt="">
+    <div class="v-bar">
+      <button class="v-nav" data-dir="-1" aria-label="이전">‹</button>
+      <span id="viewerCap"></span>
+      <button class="v-nav" data-dir="1" aria-label="다음">›</button>
+    </div>
+    <button class="v-del">이 사진 지우기</button>
+  </div>
+
+  <!-- 사진 고르기 (숨김) -->
+  <input type="file" id="photoInput" accept="image/*" multiple hidden>
+
+  <div id="holdHint" class="hold-hint hidden"></div>
+  <div id="toast" class="toast"></div>
+
+  <script src="config.js"></script>
+  <script src="photos.js"></script>
+  <script src="sketch.js"></script>
+</body>
+</html>
