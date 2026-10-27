@@ -1,9 +1,3 @@
-// =============================================
-//  얼굴 화단 (핸드폰용) — p5.js (그리기) + matter.js (씨앗 낙하, 흙 부스러기)
-//  시술 = 씨앗 → 새싹 → 꽃 → 시듦 (종류별로 같은 꽃 · 같은 효과)
-//  토닝 = 화단을 문질러 물을 주면 얼굴이 연두색으로, 신경 쓰이는 곳 = 새
-//  심은 꽃을 누르면 줌인 → 꽃마다 다른 터치 동작 / 바깥을 누르면 원래대로
-// =============================================
 const { Engine, Bodies, Composite, Body } = Matter;
 
 const STORAGE_KEY = 'skin-flower-v1';
@@ -11,11 +5,9 @@ const BIRD_KEY = 'skin-flower-birds-v1';
 const PIZZA_KEYS = { plants: 'skin-pizza-v1', birds: 'skin-pizza-olives-v1' };
 const OLD_KEYS = { plants: 'skin-garden-v1', birds: 'skin-garden-birds-v1' };
 
-// 화면 위·아래 여백 (style.css의 --top, --bar와 맞춰요)
 const TOP_H = 84;
 const BAR_H = 74;
 
-// ---------- 색 ----------
 const BG = '#f6f3ec';           // 배경 단색
 const RIM = '#ece7dd';          // 돌 테두리 바탕
 const STONE = '#ddd6cb';        // 돌
@@ -931,17 +923,22 @@ function drawPlant(p, st, u, fx, t) {
 // 느낌표: 꽃이 다 피었거나 다 졌는데 아직 확인하지 않았을 때
 function alertOf(p, st) {
   if (isWhole(p)) return null;
-  const seen = p.seen || {};
+  const seen = { ...(p.seen || {}), ...(dayOffset ? previewSeen[p.id] : null) };
   if (st.stage === 'bloom' && !seen.bloom) return 'bloom';
   if (st.stage === 'wilted' && wiltFade(st) > 0 && !seen.wilted) return 'wilted';
   return null;
 }
 
-// 꽃을 확인하면 느낌표가 사라져요 (시간 여행 중에는 기록하지 않아요)
+// 시간 슬라이더로 미래를 보는 중에는 그 동안만 지워 두고 저장하지 않아요
+const previewSeen = {};
 function markSeen(p) {
-  if (dayOffset) return;
   const a = alertOf(p, getStatus(p, getNow()));
   if (!a) return;
+  if (dayOffset) {
+    previewSeen[p.id] = { ...(previewSeen[p.id] || {}), [a]: true, ...(a === 'wilted' ? { bloom: true } : {}) };
+    updateAlertDot();
+    return;
+  }
   p.seen = { ...(p.seen || {}), [a]: true };
   if (a === 'wilted') p.seen.bloom = true;
   savePlants();
